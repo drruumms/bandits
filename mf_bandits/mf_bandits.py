@@ -36,16 +36,18 @@ class MF_GaussianBandit(MF_MultiArmedBandit):
     zeta(m) is the bound on the interval about which fidelity m over/undershoots 
     the mean of the highest fidelity
     """
-    def __init__(self, k, m, mu=0, sigma=1, zeta=0):
+    def __init__(self, k, m, mu=0, sigma=1, zeta=0, costs=0):
         super(MF_GaussianBandit, self).__init__(k,m)
         self.mu = mu
         self.sigma = sigma
         self.zeta = zeta
+        self.costs = costs
         self.reset()
 
     def reset(self):
         self.action_values = np.random.normal(self.mu, self.sigma, (self.k, self.m))
-        self.optimal = np.argmax(self.action_values,axis=0)
+        #oracle always plays the highest fidelity best arm
+        self.optimal = [np.argmax(self.action_values[:,self.m-1]), self.m-1]
 
     def pull(self, action):
         return (np.random.normal(self.action_values[action[0], action[1]]),

@@ -19,8 +19,10 @@ class Agent(object):
         self.k = bandit.k
         self.m = bandit.m
         self.zeta = bandit.zeta
+        self.costs = bandit.costs
         self.prior = prior
         self.gamma = gamma
+        self.make_gamma_fn()
         self._value_estimates = prior*np.ones((self.k, self.m))
         self.action_attempts = np.zeros((self.k,self.m))
         self.t = 0
@@ -28,6 +30,15 @@ class Agent(object):
 
     def __str__(self):
         return 'f/{}'.format(str(self.policy))
+
+    def make_gamma_fn(self):
+        """
+        makes the gamma function for choosing a fidelity
+        based on relative costs and mean bdry interval
+        """
+        self.gamma_fn = np.zeros(self.m-1)    
+        for m in range(self.m-1):
+            self.gamma_fn[m] = np.sqrt(self.costs[m]/self.costs[m+1]*(self.zeta[1,m]**2)) 
 
     def reset(self):
         """
@@ -54,6 +65,7 @@ class Agent(object):
 
         self._value_estimates[self.last_action] += g*(reward - q)
         self.t += 1
+
 
     @property
     def value_estimates(self):

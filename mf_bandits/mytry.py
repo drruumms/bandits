@@ -19,14 +19,14 @@ class GaussianEx(object):
     High fidelities dist. w/ means mu_k uniform in grid (0,1)
     Fidelity "m" means dist. uniformly within a +- zeta(m) band about mu_k
     """
-    def __init__(self, no_arms, no_fids, zeta, high_fid_mean_dist='unif'):
+    def __init__(self, no_arms, no_fids, zeta, costs, high_fid_mean_dist='unif'):
         self.label = 'Multi-armed Bandits - Gaussian ('+high_fid_mean_dist+')'
         self.no_arms = no_arms
         self.no_fids = no_fids
-        self.bandit = self.make_bandit(zeta, high_fid_mean_dist)
+        self.bandit = self.make_bandit(zeta, costs, high_fid_mean_dist)
         self.agents = [Agent(self.bandit, MF_UCBPolicy(2))]
 
-    def make_bandit(self,zeta, high_fid_mean_dist):        
+    def make_bandit(self,zeta, costs, high_fid_mean_dist):        
         #pick high fidelity means either as a uniform grid in (0,1)
         #or sampled from a N(0,1) dist, sorted low->high
         if high_fid_mean_dist=='unif':
@@ -48,7 +48,7 @@ class GaussianEx(object):
         #save zeta interval into matrix w/ corresponding fidelity, arm positions
         self.zeta = np.broadcast_to(zeta, (self.no_arms, self.no_fids))
         #create MF-MA bandit w/ Gaussian rewards w/ means according to fid. means matrix
-        return MF_GaussianBandit(k=self.no_arms, m=self.no_fids, mu=self.fid_means, sigma=0.2, zeta=self.zeta)
+        return MF_GaussianBandit(k=self.no_arms, m=self.no_fids, mu=self.fid_means, sigma=0.2, zeta=self.zeta, costs=costs)
     
     def plot_means(self):
         plt.plot(self.fid_means, '.')
@@ -57,17 +57,19 @@ class GaussianEx(object):
 
 
 if __name__ == '__main__':
-    experiments = 500
+    experiments = 10
     trials = 1000
     zeta = [0.2, 0.1, 0]
-    example = GaussianEx(no_arms=500, no_fids=3, zeta=zeta)
+    costs = [1, 10, 1000]
+    example = GaussianEx(no_arms=5, no_fids=3, zeta=zeta, costs=costs)
     #example.plot_means()
 
     zeta2 = [1, 0.5, 0.2, 0]
-    example2 = GaussianEx(no_arms=500, no_fids=4, zeta=zeta2, high_fid_mean_dist='normal')
+    costs2 = [1,5,20,50]
+    example2 = GaussianEx(no_arms=500, no_fids=4, zeta=zeta2, costs=costs2, high_fid_mean_dist='normal')
     #example2.plot_means()
 
     env = Environment(example.bandit, example.agents, example.label)
     scores, optimal = env.run(trials, experiments)
-    # env.plot_results(scores, optimal)
+    env.plot_results(scores, optimal)
     # env.plot_beliefs()

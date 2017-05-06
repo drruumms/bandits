@@ -64,9 +64,19 @@ class MF_UCBPolicy(Policy):
         q = agent.value_estimates + exploration + agent.zeta
         #get min q bounds across fidelities for each arm
         min_arm_bounds = np.amin(q, axis=1)
-        min_fid_indeces = np.argmin(q,axis=1)
+        #pick arm that maximizes min arm bounds
         max_arm_index = np.argmax(min_arm_bounds)
-        action = [max_arm_index, min_fid_indeces[max_arm_index]]
+        #pick lowest, most uncertain fidelity
+        for m in range(agent.m-1):
+            action = None
+            if exploration[max_arm_index, m]>=agent.gamma_fn[m]:
+                print('playing arm ', max_arm_index)
+                print('playing fidelity ', m)
+                action=[max_arm_index, m]
+                break    
+        if action==None:
+            action=[max_arm_index,agent.m-1]
+
         return action
         # check = np.where(q == action)[0]
         # if len(check) == 0:
