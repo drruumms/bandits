@@ -7,9 +7,9 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-from agent import Agent
-from policy import UCBPolicy
-from environment import Environment
+from mf_agent import Agent
+from mf_policy import MF_UCBPolicy, UCBPolicy
+from mf_environment import Environment
 from mf_bandits import MF_GaussianBandit
 
 class GaussianEx(object):
@@ -20,11 +20,11 @@ class GaussianEx(object):
     Fidelity "m" means dist. uniformly within a +- zeta(m) band about mu_k
     """
     def __init__(self, no_arms, no_fids, zeta, high_fid_mean_dist='unif'):
-        self.label = 'Multi-armed Bandits - Gaussian'
+        self.label = 'Multi-armed Bandits - Gaussian ('+high_fid_mean_dist+')'
         self.no_arms = no_arms
         self.no_fids = no_fids
         self.bandit = self.make_bandit(zeta, high_fid_mean_dist)
-        self.agents = [Agent(self.bandit, UCBPolicy(1))]
+        self.agents = [Agent(self.bandit, MF_UCBPolicy(2))]
 
     def make_bandit(self,zeta, high_fid_mean_dist):        
         #pick high fidelity means either as a uniform grid in (0,1)
@@ -44,9 +44,11 @@ class GaussianEx(object):
             #sample low fidelity means uniformly from the zeta interval
             self.fid_means[:,m] = np.random.uniform(lower_bd, upper_bd, size=self.no_arms)
         #add high fidelity means to fidelity mean matrix    
-        self.fid_means = np.c_[self.fid_means, high_fid_means]    
+        self.fid_means = np.c_[self.fid_means, high_fid_means]
+        #save zeta interval into matrix w/ corresponding fidelity, arm positions
+        self.zeta = np.broadcast_to(zeta, (self.no_arms, self.no_fids))
         #create MF-MA bandit w/ Gaussian rewards w/ means according to fid. means matrix
-        return MF_GaussianBandit(k=self.no_arms, m=self.no_fids, mu=self.fid_means, sigma=0.2)
+        return MF_GaussianBandit(k=self.no_arms, m=self.no_fids, mu=self.fid_means, sigma=0.2, zeta=self.zeta)
     
     def plot_means(self):
         plt.plot(self.fid_means, '.')
@@ -59,13 +61,13 @@ if __name__ == '__main__':
     trials = 1000
     zeta = [0.2, 0.1, 0]
     example = GaussianEx(no_arms=500, no_fids=3, zeta=zeta)
-    example.plot_means()
+    #example.plot_means()
 
     zeta2 = [1, 0.5, 0.2, 0]
     example2 = GaussianEx(no_arms=500, no_fids=4, zeta=zeta2, high_fid_mean_dist='normal')
-    example2.plot_means()
+    #example2.plot_means()
 
     env = Environment(example.bandit, example.agents, example.label)
     scores, optimal = env.run(trials, experiments)
-    env.plot_results(scores, optimal)
-    env.plot_beliefs()
+    # env.plot_results(scores, optimal)
+    # env.plot_beliefs()

@@ -33,17 +33,20 @@ class MF_GaussianBandit(MF_MultiArmedBandit):
     Each arm k has m fidelities
     Passing in a matrix of mu values allows for each arm and fidelity level to use
     the corresponding mean
+    zeta(m) is the bound on the interval about which fidelity m over/undershoots 
+    the mean of the highest fidelity
     """
-    def __init__(self, k, m, mu=0, sigma=1):
+    def __init__(self, k, m, mu=0, sigma=1, zeta=0):
         super(MF_GaussianBandit, self).__init__(k,m)
         self.mu = mu
         self.sigma = sigma
+        self.zeta = zeta
         self.reset()
 
     def reset(self):
         self.action_values = np.random.normal(self.mu, self.sigma, (self.k, self.m))
-        self.optimal = np.argmax(self.action_values)
+        self.optimal = np.argmax(self.action_values,axis=0)
 
     def pull(self, action):
-        return (np.random.normal(self.action_values[action]),
+        return (np.random.normal(self.action_values[action[0], action[1]]),
                 action == self.optimal)

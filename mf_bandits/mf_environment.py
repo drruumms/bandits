@@ -1,4 +1,5 @@
-#environment.py
+#mf_environment.py
+#multifidelity extension of
 #Byron Galbraith's multi-armed bandit simulator Environment class
 #source: https://github.com/bgalbraith/bandits/blob/master/bandits/environment.py
 
@@ -12,7 +13,7 @@ import seaborn as sns
 import scipy.stats as stats
 from tqdm import tqdm
 
-from agent import BetaAgent
+from mf_agent import Agent
 
 
 class Environment(object):
