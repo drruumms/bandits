@@ -56,11 +56,12 @@ class MF_UCBPolicy(Policy):
         return 'UCB (c={})'.format(self.c)
 
     def choose(self, agent):
+        #compute exploration term of UCB
         exploration = np.log(agent.t+1) / agent.action_attempts
         exploration[np.isnan(exploration)] = 0
         exploration = np.power(exploration, 1/self.c)
 
-        #recall that rows=arms, cols=fidelities
+        #recall that rows=arms, cols=fidelities, compute total UCB for each arm+fidelity
         q = agent.value_estimates + exploration + agent.zeta
         #get min q bounds across fidelities for each arm
         min_arm_bounds = np.amin(q, axis=1)
@@ -70,11 +71,12 @@ class MF_UCBPolicy(Policy):
         for m in range(agent.m-1):
             action = None
             if exploration[max_arm_index, m]>=agent.gamma_fn[m]:
-                # print('playing arm ', max_arm_index)
-                # print('playing fidelity ', m)
+                #print('playing arm ', max_arm_index)
+                #print('playing fidelity ', m)
                 action=[max_arm_index, m]
                 break    
         if action==None:
+            #if low fidelities all certain, play at highest fidelity
             action=[max_arm_index,agent.m-1]
 
         return action

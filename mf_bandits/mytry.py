@@ -24,7 +24,7 @@ class GaussianEx(object):
         self.no_arms = no_arms
         self.no_fids = no_fids
         self.bandit = self.make_bandit(zeta, costs, high_fid_mean_dist)
-        self.agents = [Agent(self.bandit, MF_UCBPolicy(2))]
+        self.agent = Agent(self.bandit, MF_UCBPolicy(2))
 
     def make_bandit(self,zeta, costs, high_fid_mean_dist):        
         #pick high fidelity means either as a uniform grid in (0,1)
@@ -57,16 +57,15 @@ class GaussianEx(object):
 
 
 if __name__ == '__main__':
-    experiments = 100
-    trials = 1000
+    experiments = 1
 
     #Example 1
     zeta1 = [0.2, 0.1, 0] #bound on fidelity mean over/undershoot
-    costs1 = [1, 10, 1000] #increasing costs of increasing fidelities
+    costs1 = [1, 10, 100] #increasing costs of increasing fidelities
     #create MF-MA bandit w/ gaussian rewards, linear means
     example1 = GaussianEx(no_arms=500, no_fids=3, zeta=zeta1, costs=costs1)
     #show means of all arms and fidelities
-    example1.plot_means()
+    #example1.plot_means()
 
     #Example 2
     zeta2 = [1, 0.5, 0.2, 0] #bound on fidelity mean over/undershoot
@@ -74,10 +73,16 @@ if __name__ == '__main__':
     #create MF-MA bandit w/ gaussian rewards, normally dist. means
     example2 = GaussianEx(no_arms=500, no_fids=4, zeta=zeta2, costs=costs2, high_fid_mean_dist='normal')
     #show means of all arms and fidelities
-    example2.plot_means()
+    #example2.plot_means()
 
     #Run simulation for Example 1 bandit
-    env = Environment(example1.bandit, example1.agents, example1.label)
-    scores, optimal = env.run(trials, experiments)
-    env.plot_results(scores, optimal)
-    # env.plot_beliefs()
+    env1 = Environment(example1.bandit, example1.agent, example1.label)
+    COST_CONSTRAINT = 1*(10**5)
+    plays = env1.run(COST_CONSTRAINT, experiments)
+    env1.plot_plays(plays)
+
+    #Run simulation for Example 2 bandit
+    env2 = Environment(example2.bandit, example2.agent, example2.label)
+    COST_CONSTRAINT = 1*(10**5)
+    plays = env2.run(COST_CONSTRAINT, experiments)
+    env2.plot_plays(plays)

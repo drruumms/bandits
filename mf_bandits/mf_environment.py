@@ -17,33 +17,49 @@ from mf_agent import Agent
 
 
 class Environment(object):
-    def __init__(self, bandit, agents, label='Multi-Armed Bandit'):
+    def __init__(self, bandit, agent, label='Multi-Armed Bandit'):
         self.bandit = bandit
-        self.agents = agents
+        self.agent = agent
         self.label = label
 
     def reset(self):
         self.bandit.reset()
-        for agent in self.agents:
-            agent.reset()
+        self.agent.reset()
 
-    def run(self, trials=100, experiments=1):
-        scores = np.zeros((trials, len(self.agents)))
-        optimal = np.zeros_like(scores)
+    def run(self, COST_CONSTRAINT, experiments=1):
+        #scores = np.zeros((10000000, len(self.agents)))
+        #optimal = np.zeros_like(scores)
+        #keep track of plays at each arm+fidelity across experiments
+        plays = np.zeros((self.agent.k, self.agent.m, experiments))
 
         for _ in tqdm(range(experiments)):
             self.reset()
-            for t in range(trials):
-                for i, agent in enumerate(self.agents):
-                    action = agent.choose()
-                    reward, is_optimal = self.bandit.pull(action)
-                    agent.observe(reward)
+            while  self.agent.Lambda < COST_CONSTRAINT:
+                action = self.agent.choose()
+                reward, is_optimal = self.bandit.pull(action)
+                self.agent.observe(reward)
 
-                    scores[t, i] += reward
-                    if is_optimal:
-                        optimal[t, i] += 1
+                plays[action[0],action[1]]+=1
+                #if is_optimal:
+                #        optimal[agent.t, i] += 1
+            #print(plays)    
+                   
 
-        return scores / experiments, optimal / experiments
+        return plays / experiments
+
+    def plot_plays(self, plays):
+        arms = np.linspace(0,499, 500)
+        ax = plt.figure()
+        for m in range(self.agent.m):
+            plt.plot(arms, plays[:,m])
+        # histogram= plt.figure()
+        # bins = np.linspace(1,500,500)
+        # #for m in range(self.agent.m):
+        # #    plt.hist(plays[:,m,:], bins) 
+        # plt.hist(plays[:,0], bins, facecolor='blue', alpha=0.5)
+        # plt.hist(plays[:,1], bins, facecolor='green',alpha=0.5)
+        # plt.hist(plays[:,2], bins, facecolor='red', alpha=0.5)
+        plt.show()   
 
     def plot_results(self, scores, optimal):
         sns.set_style('white')

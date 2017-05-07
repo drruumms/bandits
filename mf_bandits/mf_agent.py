@@ -19,6 +19,7 @@ class Agent(object):
         self.k = bandit.k #get number of bandit arms
         self.m = bandit.m #get number of arm fidelities
         self.zeta = bandit.zeta #inherit fidelity mean over/undershooting bounds
+        self.costs = bandit.costs #inherit costs of fidelities
 
         #dont know what these two are for, just using default settings (which do nada)
         self.prior = prior
@@ -33,6 +34,8 @@ class Agent(object):
         self.action_attempts = np.zeros((self.k,self.m)) 
         #track number of total plays
         self.t = 0
+        #track total cost Lambda of plays
+        self.Lambda = 0
         #last arm+fidelity play
         self.last_action = None
 
@@ -52,8 +55,8 @@ class Agent(object):
         """
         Resets the agent's memory to an initial state.
         """
-        self._value_estimates[:] = self.prior
-        self.action_attempts[:] = 0
+        self._value_estimates[:,:] = self.prior
+        self.action_attempts[:,:] = 0
         self.last_action = None
         self.t = 0
 
@@ -82,7 +85,11 @@ class Agent(object):
         #update estimate of value of current arm+fidelity
         #based on # of plays (1/g), historic estimate (q), and observed reward
         self._value_estimates[self.last_action[0], self.last_action[1]] += g*(reward - q)
+
+        #update total play count
         self.t += 1
+        #update total cost of plays
+        self.Lambda += self.costs[self.last_action[1]]
 
 
     @property
