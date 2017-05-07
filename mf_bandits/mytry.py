@@ -16,7 +16,7 @@ class GaussianEx(object):
     """
     Multifidelity multiarmed Bandit
     w/ Gaussian rewards
-    High fidelities dist. w/ means mu_k uniform in grid (0,1)
+    High fidelities dist. w/ means mu_k uniform in grid (0,1) or normally dist.
     Fidelity "m" means dist. uniformly within a +- zeta(m) band about mu_k
     """
     def __init__(self, no_arms, no_fids, zeta, costs, high_fid_mean_dist='unif'):
@@ -57,19 +57,27 @@ class GaussianEx(object):
 
 
 if __name__ == '__main__':
-    experiments = 10
+    experiments = 100
     trials = 1000
-    zeta = [0.2, 0.1, 0]
-    costs = [1, 10, 1000]
-    example = GaussianEx(no_arms=5, no_fids=3, zeta=zeta, costs=costs)
-    #example.plot_means()
 
-    zeta2 = [1, 0.5, 0.2, 0]
-    costs2 = [1,5,20,50]
+    #Example 1
+    zeta1 = [0.2, 0.1, 0] #bound on fidelity mean over/undershoot
+    costs1 = [1, 10, 1000] #increasing costs of increasing fidelities
+    #create MF-MA bandit w/ gaussian rewards, linear means
+    example1 = GaussianEx(no_arms=500, no_fids=3, zeta=zeta1, costs=costs1)
+    #show means of all arms and fidelities
+    example1.plot_means()
+
+    #Example 2
+    zeta2 = [1, 0.5, 0.2, 0] #bound on fidelity mean over/undershoot
+    costs2 = [1,5,20,50]    #increasings costs of increasing fidelities
+    #create MF-MA bandit w/ gaussian rewards, normally dist. means
     example2 = GaussianEx(no_arms=500, no_fids=4, zeta=zeta2, costs=costs2, high_fid_mean_dist='normal')
-    #example2.plot_means()
+    #show means of all arms and fidelities
+    example2.plot_means()
 
-    env = Environment(example.bandit, example.agents, example.label)
+    #Run simulation for Example 1 bandit
+    env = Environment(example1.bandit, example1.agents, example1.label)
     scores, optimal = env.run(trials, experiments)
     env.plot_results(scores, optimal)
     # env.plot_beliefs()

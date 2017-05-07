@@ -70,8 +70,8 @@ class MF_UCBPolicy(Policy):
         for m in range(agent.m-1):
             action = None
             if exploration[max_arm_index, m]>=agent.gamma_fn[m]:
-                print('playing arm ', max_arm_index)
-                print('playing fidelity ', m)
+                # print('playing arm ', max_arm_index)
+                # print('playing fidelity ', m)
                 action=[max_arm_index, m]
                 break    
         if action==None:
