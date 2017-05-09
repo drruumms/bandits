@@ -78,11 +78,13 @@ if __name__ == '__main__':
     #Run simulation for Example 1 bandit
     env1 = Environment(example1.bandit, example1.agent, example1.label)
     COST_CONSTRAINT = 1*(10**5)
-    plays = env1.run(COST_CONSTRAINT, experiments)
+    plays, regret = env1.run(COST_CONSTRAINT, experiments)
     env1.plot_plays(plays)
+    env1.plot_regret(regret)
 
     #Run simulation for Example 2 bandit
     env2 = Environment(example2.bandit, example2.agent, example2.label)
     COST_CONSTRAINT = 1*(10**5)
-    plays = env2.run(COST_CONSTRAINT, experiments)
+    plays, regret = env2.run(COST_CONSTRAINT, experiments)
     env2.plot_plays(plays)
+    env2.plot_regret(regret)
