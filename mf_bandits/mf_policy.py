@@ -37,11 +37,11 @@ class UCBPolicy(Policy):
 
         q = agent.value_estimates + exploration
         action = np.argmax(q)
-        # check = np.where(q == action)[0]
-        # if len(check) == 0:
-        #     return action
-        # else:
-        #     return np.random.choice(check)
+        check = np.where(q == action)[0]
+        if len(check) == 0:
+            return action
+        else:
+            return np.random.choice(check)
 
 class MF_UCBPolicy(Policy):
     """
@@ -49,17 +49,18 @@ class MF_UCBPolicy(Policy):
     factor to the expected value of each arm which can influence a greedy
     selection strategy to more intelligently explore less confident options.
     """
-    def __init__(self, c):
-        self.c = c
+    def __init__(self, rho, psi_inv):
+        self.rho = rho
+        self.psi_inv = psi_inv
 
     def __str__(self):
-        return 'UCB (c={})'.format(self.c)
+        return 'UCB (rho={})'.format(self.rho)
 
     def choose(self, agent):
         #compute exploration term of UCB
-        exploration = np.log(agent.t+1) / agent.action_attempts
+        exploration = np.power(agent.action_attempts,-1)*self.rho*np.log(agent.t+1)
         exploration[np.isnan(exploration)] = 0
-        exploration = np.power(exploration, 1/self.c)
+        exploration = self.psi_inv(exploration)
 
         #recall that rows=arms, cols=fidelities, compute total UCB for each arm+fidelity
         q = agent.value_estimates + exploration + agent.zeta
@@ -68,8 +69,8 @@ class MF_UCBPolicy(Policy):
         #pick arm that maximizes min arm bounds
         max_arm_index = np.argmax(min_arm_bounds)
         #pick lowest, most uncertain fidelity
+        action = None
         for m in range(agent.m-1):
-            action = None
             if exploration[max_arm_index, m]>=agent.gamma_fn[m]:
                 #print('playing arm ', max_arm_index)
                 #print('playing fidelity ', m)

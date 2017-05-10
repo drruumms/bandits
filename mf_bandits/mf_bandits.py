@@ -47,6 +47,7 @@ class MF_GaussianBandit(MF_MultiArmedBandit):
 
     def reset(self):
         self.action_values = np.random.normal(self.mu, self.sigma, (self.k, self.m))
+        
         #oracle only looks at highest fidelity (index m-1) to select the best arm
         self.optimal = [np.argmax(self.action_values[:,self.m-1]), self.m-1]
 

@@ -30,12 +30,13 @@ class Environment(object):
         #scores = np.zeros((10000000, len(self.agents)))
         #optimal = np.zeros_like(scores)
         #keep track of plays at each arm+fidelity across experiments
-        plays = np.zeros((self.agent.k, self.agent.m, experiments))
-        regret = COST_CONSTRAINT*self.bandit.pull(self.bandit.optimal)
-        regretS = [regret]
+        plays = np.zeros((self.agent.k, self.agent.m))
+        ave_regret = 0
 
-        for _ in tqdm(range(experiments)):
+        for _ in range(experiments):
             self.reset()
+            #initialize regret
+            regret = COST_CONSTRAINT*self.bandit.pull(self.bandit.optimal)
             while  self.agent.Lambda < COST_CONSTRAINT:
                 action = self.agent.choose()
                 reward = self.bandit.pull(action)
@@ -46,31 +47,27 @@ class Environment(object):
 
                 plays[arm_index, fidelity_index]+=1
                 regret -= self.bandit.costs[fidelity_index]*self.bandit.pull([arm_index, self.bandit.m-1])
-                regretS = np.c_[regretS, regret]
-                #if is_optimal:
-                #        optimal[agent.t, i] += 1
-            #print(plays)    
-                   
 
-        print(regretS.shape); raise
-        return plays / experiments, regretS / experiments
+            ave_regret+= regret  
+                   
+        return plays / experiments, ave_regret / experiments
 
     def plot_plays(self, plays):
         arms = np.linspace(0,499, 500)
-        ax = plt.figure()
-        for m in range(self.agent.m):
-            plt.plot(arms, plays[:,m], label="fidelity %d" %m)
-        plt.legend(loc=0)    
-        # histogram= plt.figure()
-        # bins = np.linspace(1,500,500)
-        # #for m in range(self.agent.m):
-        # #    plt.hist(plays[:,m,:], bins) 
-        # plt.hist(plays[:,0], bins, facecolor='blue', alpha=0.5)
-        # plt.hist(plays[:,1], bins, facecolor='green',alpha=0.5)
-        # plt.hist(plays[:,2], bins, facecolor='red', alpha=0.5)
-        plt.show()   
-
-    def plot_regret(self, regret):
+        colors = ['r', 'b', 'g', 'y']
         plt.figure()
-        plt.plot(regret)
-        plt.show()   
+        for m in range(self.agent.m):
+            plt.bar(arms, plays[:,m], label="fidelity {0}".format(m), color = colors[m])
+        plt.legend(loc=0)
+        axes= plt.gca()
+        axes.set_xlim([0, 510])    
+        plt.show()
+
+    def plot_cost_vs_regret(self, cost_constraints, regrets):
+         #plot regret vs cost
+        plt.plot(cost_constraints, regrets)
+        axes = plt.gca()
+        axes.set_xlim([np.amin(cost_constraints), np.amax(cost_constraints)])
+        axes.set_ylim([np.amin(regrets),np.amax(regrets)])
+        plt.show()
+
