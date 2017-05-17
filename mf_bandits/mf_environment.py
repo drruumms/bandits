@@ -27,8 +27,6 @@ class Environment(object):
         self.agent.reset()
 
     def run(self, COST_CONSTRAINT, experiments=1):
-        #scores = np.zeros((10000000, len(self.agents)))
-        #optimal = np.zeros_like(scores)
         #keep track of plays at each arm+fidelity across experiments
         plays = np.zeros((self.agent.k, self.agent.m))
         ave_regret = 0
@@ -37,16 +35,19 @@ class Environment(object):
             self.reset()
             #initialize regret
             regret = COST_CONSTRAINT*self.bandit.pull(self.bandit.optimal)
-            while  self.agent.Lambda < COST_CONSTRAINT:
+            print("opt arm is arm %d" %self.bandit.optimal[0])
+            while  self.agent.Lambda <= COST_CONSTRAINT:
                 action = self.agent.choose()
                 reward = self.bandit.pull(action)
                 self.agent.observe(reward)
 
                 arm_index = action[0]
                 fidelity_index = action[1]
-
-                plays[arm_index, fidelity_index]+=1
-                regret -= self.bandit.costs[fidelity_index]*self.bandit.pull([arm_index, self.bandit.m-1])
+                #print("arm= %d" %arm_index)
+                #print("fidelity = %d" %fidelity_index)
+                if self.agent.Lambda <= COST_CONSTRAINT:
+                    plays[arm_index, fidelity_index]+=1
+                    regret -= self.bandit.costs[fidelity_index]*self.bandit.pull([arm_index, self.bandit.m-1])
 
             ave_regret+= regret  
                    

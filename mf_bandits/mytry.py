@@ -66,7 +66,7 @@ class GaussianEx(object):
 
 
 if __name__ == '__main__':
-    experiments = 100
+    experiments = 1000
 
     #Example 1
     zeta1 = [0.2, 0.1, 0] #bound on fidelity mean over/undershoot
@@ -83,35 +83,35 @@ if __name__ == '__main__':
     zeta2 = [1, 0.5, 0.2, 0] #bound on fidelity mean over/undershoot
     costs2 = [1,5,20,50]    #increasings costs of increasing fidelities
     #create MF-MA bandit w/ gaussian rewards, normally dist. means
-    example2 = GaussianEx(no_arms=500, no_fids=4, zeta=zeta2, costs=costs2, high_fid_mean_dist='normal')
+    example2 = GaussianEx(no_arms=5, no_fids=4, zeta=zeta2, costs=costs2, high_fid_mean_dist='normal')
     #show means of all arms and fidelities
-    #example2.plot_means()
-    example2_single = GaussianEx(no_arms=500, no_fids=1, zeta=[0], costs=[50], high_fid_mean_dist='normal')
+    example2.plot_means()
+    example2_single = GaussianEx(no_arms=5, no_fids=1, zeta=[0], costs=[50], high_fid_mean_dist='normal')
     
     # #Run simulation for Example 1 bandit
-    # env1 = Environment(example1.bandit, example1.agent, example1.label)
-    # env1_single = Environment(example1_single.bandit, example1_single.agent, example1_single.label)
+    env1 = Environment(example1.bandit, example1.agent, example1.label)
+    env1_single = Environment(example1_single.bandit, example1_single.agent, example1_single.label)
 
-    # #regret vs cost increases 
-    # cost_constraints = np.linspace(0.5*(10**5), 5*(10**5), num=10)
-    # regrets = np.zeros_like(cost_constraints)
-    # regrets2= np.zeros_like(cost_constraints)
+    #regret vs cost increases 
+    cost_constraints = np.linspace(0.5*(10**5), 5*(10**5), num=10)
+    regrets = np.zeros_like(cost_constraints)
+    regrets2= np.zeros_like(cost_constraints)
 
-    # for k in tqdm(range(len(cost_constraints))):
-    #     plays, regrets[k] = env1.run(cost_constraints[k], experiments)
-    #     plays2, regrets2[k] = env1_single.run(cost_constraints[k], experiments)
-    #     #plot arm+fidelity plays
-    #     #env1.plot_plays(plays)
+    for k in tqdm(range(len(cost_constraints))):
+        plays, regrets[k] = env1.run(cost_constraints[k], experiments)
+        plays2, regrets2[k] = env1_single.run(cost_constraints[k], experiments)
+        #plot arm+fidelity plays
+        #env1.plot_plays(plays)
 
     #plot regret vs cost
-    # env1.plot_cost_vs_regret(cost_constraints, regrets)
-    # #plot regret vs cost
-    # plt.plot(cost_constraints, regrets, color='b')
-    # plt.plot(cost_constraints, regrets2, color='r')
-    # axes = plt.gca()
-    # axes.set_xlim([np.amin(cost_constraints), np.amax(cost_constraints)])
-    # axes.set_ylim([np.amin(regrets),np.amax(regrets2)])
-    # plt.show()
+    env1.plot_cost_vs_regret(cost_constraints, regrets)
+    #plot regret vs cost
+    plt.plot(cost_constraints, regrets, color='b')
+    plt.plot(cost_constraints, regrets2, color='r')
+    axes = plt.gca()
+    axes.set_xlim([np.amin(cost_constraints), np.amax(cost_constraints)])
+    axes.set_ylim([np.amin(regrets),np.amax(regrets2)])
+    plt.show()
 
     #Run simulation for Example 2 bandit
     env2 = Environment(example2.bandit, example2.agent, example2.label)

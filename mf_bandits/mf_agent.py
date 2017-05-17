@@ -50,6 +50,7 @@ class Agent(object):
         self.gamma_fn = np.zeros(self.m-1)    
         for m in range(self.m-1):
             self.gamma_fn[m] = np.power((costs[m]/costs[m+1])*(self.zeta[1,m]**2), 1/2) 
+        print('gamma = ',self.gamma_fn)    
 
     def reset(self):
         """

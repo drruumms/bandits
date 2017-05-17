@@ -23,25 +23,32 @@ class UCBPolicy(Policy):
     The Upper Confidence Bound algorithm (UCB1). It applies an exploration
     factor to the expected value of each arm which can influence a greedy
     selection strategy to more intelligently explore less confident options.
-    """
-    def __init__(self, c):
-        self.c = c
 
+    ONLY LOOKS AT HIGHEST FIDELITY
+    """
+    def __init__(self, rho, psi_inv):
+        self.psi_inv = psi_inv
+        self.rho = rho
+    
     def __str__(self):
-        return 'UCB (c={})'.format(self.c)
+        return 'UCB (rho={})'.format(self.rho)
 
     def choose(self, agent):
-        exploration = np.log(agent.t+1) / agent.action_attempts
+        #compute exploration term of UCB
+        exploration = np.power(agent.action_attempts,-1)*self.rho*np.log(agent.t+1)
         exploration[np.isnan(exploration)] = 0
-        exploration = np.power(exploration, 1/self.c)
+        exploration = self.psi_inv(exploration)
 
+        #recall that rows=arms, cols=fidelities, compute total UCB for each arm+fidelity
         q = agent.value_estimates + exploration
-        action = np.argmax(q)
-        check = np.where(q == action)[0]
-        if len(check) == 0:
-            return action
-        else:
-            return np.random.choice(check)
+        #get q bound for each arm
+        q_arms = q[:, agent.m-1]
+        #pick arm that maximizes arm bounds
+        max_arm_index = np.argmax(q_arms)
+        #play best arm at highest fidelity
+        action=[max_arm_index,agent.m-1]
+
+        return action
 
 class MF_UCBPolicy(Policy):
     """
