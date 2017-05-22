@@ -53,5 +53,5 @@ class MF_GaussianBandit(MF_MultiArmedBandit):
 
     def pull(self, action):
         #pulls the bandit arm action[0] at fidelity action[1]
-        return np.random.normal(self.action_values[action[0], action[1]])
+        return np.random.normal(self.action_values[action[0], action[1]], self.sigma), action==self.optimal
                 

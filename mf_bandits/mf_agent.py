@@ -59,6 +59,7 @@ class Agent(object):
         self._value_estimates[:,:] = self.prior
         self.action_attempts[:,:] = 0
         self.last_action = None
+        self.Lambda=0
         self.t = 0
 
     def choose(self):

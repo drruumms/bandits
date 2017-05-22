@@ -65,8 +65,9 @@ class MF_UCBPolicy(Policy):
 
     def choose(self, agent):
         #compute exploration term of UCB
-        exploration = np.power(agent.action_attempts,-1)*self.rho*np.log(agent.t+1)
-        exploration[np.isnan(exploration)] = 0
+        # exploration = np.power(agent.action_attempts,-1)*self.rho*np.log(agent.t+1)
+        exploration = self.rho*np.log(agent.t+1)/(agent.action_attempts)
+        exploration[np.isnan(exploration)] = 10000
         exploration = self.psi_inv(exploration)
 
         #recall that rows=arms, cols=fidelities, compute total UCB for each arm+fidelity

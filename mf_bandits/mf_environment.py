@@ -26,32 +26,63 @@ class Environment(object):
         self.bandit.reset()
         self.agent.reset()
 
+    def pull_all_arms(self, plays, regret):
+        #pull each arm once at each fidelity to intialize
+        for k in range(self.bandit.k):
+            #reward for pulling highest fidelity for this arm
+            high_fid_reward, dont_use = self.bandit.pull([k, self.bandit.m-1])
+            for m in range(self.bandit.m):
+                #get reward for arm k fidelity m
+                action = [k,m]
+                reward, dont_use = self.bandit.pull(action)
+                #updates memory of previous action
+                self.agent.last_action = action
+                #cost of pulling arm            
+                pull_cost = self.bandit.costs[m]
+                #observe and record plays, rewards, regrets
+                self.agent.observe(reward)
+                plays[k,m] +=1
+                regret -= pull_cost*high_fid_reward
+        #return play count, regret        
+        return plays, regret        
+
     def run(self, COST_CONSTRAINT, experiments=1):
         #keep track of plays at each arm+fidelity across experiments
         plays = np.zeros((self.agent.k, self.agent.m))
         ave_regret = 0
+        optimal_pulls = 0
 
         for _ in range(experiments):
             self.reset()
             #initialize regret
-            regret = COST_CONSTRAINT*self.bandit.pull(self.bandit.optimal)
-            print("opt arm is arm %d" %self.bandit.optimal[0])
+            optimal_reward, dont_use = self.bandit.pull(self.bandit.optimal)
+            regret = COST_CONSTRAINT*optimal_reward
+
+            #pull each arm once at each fidelity to intialize
+            plays, regret = self.pull_all_arms(plays, regret)
+
+            #print("opt arm is arm %d" %self.bandit.optimal[0])
             while  self.agent.Lambda <= COST_CONSTRAINT:
                 action = self.agent.choose()
-                reward = self.bandit.pull(action)
-                self.agent.observe(reward)
+                reward, optimal_pull = self.bandit.pull(action)
 
                 arm_index = action[0]
                 fidelity_index = action[1]
+                high_fid_reward, dont_use = self.bandit.pull([arm_index, self.bandit.m-1])
                 #print("arm= %d" %arm_index)
                 #print("fidelity = %d" %fidelity_index)
-                if self.agent.Lambda <= COST_CONSTRAINT:
-                    plays[arm_index, fidelity_index]+=1
-                    regret -= self.bandit.costs[fidelity_index]*self.bandit.pull([arm_index, self.bandit.m-1])
+                pull_cost = self.bandit.costs[fidelity_index]
+                optimal_pulls += optimal_pull
 
-            ave_regret+= regret  
+                if self.agent.Lambda+pull_cost <= COST_CONSTRAINT:
+                    self.agent.observe(reward)
+                    plays[arm_index, fidelity_index]+=1
+                    regret -= pull_cost*high_fid_reward
+                else:
+                    break
+            ave_regret+= regret             
                    
-        return plays / experiments, ave_regret / experiments
+        return plays / experiments, ave_regret / experiments, optimal_pulls / experiments
 
     def plot_plays(self, plays):
         arms = np.linspace(0,499, 500)
