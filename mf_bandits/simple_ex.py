@@ -17,13 +17,43 @@ def make_psi_inv(pow):
 
 if __name__ == '__main__':
     experiments = 1
-    
+
     #Simple Example - Multifidelity
     means = np.zeros((5,3))
-    means[:,0] = [0.8, 1.1, 1.0, 1.0, 1.1]
-    means[:,1] = [0.8, 0.9, 0.4, 0.4, 0.5]
-    means[:,2] = [0.8, 0.7, 0.6, 0.6, 0.7]
+
+    #Lowest regret for MF-UCB, lower fidelities undervalue subopt arms,
+    # and overvalue opt arm
+    means[:,0] = [1.2, 0.3, 0.2, 0.2, 0.3]
+    means[:,1] = [1.0, 0.5, 0.4, 0.4, 0.5]
+    means[:,2] = [0.8, 0.7, 0.6, 0.6, 0.7]   
     zeta = [0.4, 0.2, 0]
+
+    #Lower regret for MF-UCB, lowest fidelities overvalue, but w/ opt arm highest
+    #     mid fidelity undervalues subopt arms, overvalues opt
+    # means[:,0] = [1.2, 1.1, 1.0, 1.0, 1.1]
+    # means[:,1] = [1.0, 0.5, 0.4, 0.4, 0.5]
+    # means[:,2] = [0.8, 0.7, 0.6, 0.6, 0.7]   
+    # zeta = [0.4, 0.2, 0]
+
+    #Lower regret for MF-UCB, Mid-fidelity upset
+    # means[:,0] = [0.8, 1.1, 1.0, 1.0, 1.1]
+    # means[:,1] = [0.8, 0.9, 0.4, 0.4, 0.5]
+    # means[:,2] = [0.8, 0.7, 0.6, 0.6, 0.7]
+    #zeta = [0.4, 0.2, 0]
+
+    #Higher regret for MF-UCB, Mid-fidelity too close together
+    #      mid-fid bandit problem consumes too many resources
+    # means[:,0] = [1.2, 1.1, 1.0, 1.0, 1.1]
+    # means[:,1] = [1.0, 0.8, 0.8, 0.8, 0.8]
+    # means[:,2] = [0.8, 0.7, 0.6, 0.6, 0.7]   
+    # zeta = [0.4, 0.2, 0]
+
+    #Very bad case - Low+mid fidelities miscalculate best arm
+    means[:,0] = [0.8, 1.1, 1.0, 1.0, 1.1]
+    means[:,1] = [0.8, 0.9, 0.8, 0.8, 0.9]
+    means[:,2] = [0.8, 0.7, 0.6, 0.6, 0.7]   
+    zeta = [0.4, 0.2, 0]
+    
     zeta = np.broadcast_to(zeta, (5,3))
     costs=[1,5,25]
 

@@ -6,6 +6,7 @@
 
 import numpy as np
 import pymc3 as pm
+import matplotlib.pyplot as plt
 
 class MF_MultiArmedBandit(object):
     """
@@ -47,11 +48,26 @@ class MF_GaussianBandit(MF_MultiArmedBandit):
 
     def reset(self):
         self.action_values = np.random.normal(self.mu, self.sigma, (self.k, self.m))
-        
+        #self.action_values = self.mu
+
         #oracle only looks at highest fidelity (index m-1) to select the best arm
         self.optimal = [np.argmax(self.action_values[:,self.m-1]), self.m-1]
 
     def pull(self, action):
         #pulls the bandit arm action[0] at fidelity action[1]
         return np.random.normal(self.action_values[action[0], action[1]], self.sigma), action==self.optimal
-                
+    
+    def plot_rewards(self):
+        fig, ax = plt.subplots()
+        index = np.arange(self.zeta.shape[0])
+        bar_width=0.1
+        opacity=0.4
+        error_config={'ecolor':'0.001'}
+        colors = ['b', 'g', 'r', 'k', 'p']
+        for fid in range(self.m):
+            rews = plt.bar(index, self.action_values[:,fid], bar_width, alpha=opacity,
+                    color=colors[fid], yerr=self.zeta[:,fid], error_kw=error_config, label='Fid %d' %fid)
+        plt.xlabel('Arm')
+        plt.ylabel('Rewards')
+        plt.title('Arm rewards')
+        plt.legend();plt.show()                
