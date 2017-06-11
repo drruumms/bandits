@@ -1,4 +1,4 @@
-#paper_sims.py
+#paper_sims2.py
 #Trying to recreate simulation results from NIPS 2016 paper
 #"Multi-fidelity Multi-armed bandit"
 
@@ -19,10 +19,10 @@ if __name__ == '__main__':
 	experiments = 1
 
 	#Example 1 - Linear means, Gaussian rewards
-	zeta = [0.2, 0.1, 0] 	#bound on fidelity mean over/undershoot
-	costs = [1, 10, 100] 	#increasing costs of increasing fidelities
+	zeta = [1, 0.5, 0.2, 0] 	#bound on fidelity mean over/undershoot
+	costs = [1, 5, 20, 50] 	#increasing costs of increasing fidelities
 	no_arms = 500  		  	#number of arms in multi-armed bandit
-	no_fids = 3				#number of fidelities per arm
+	no_fids = 4				#number of fidelities per arm
 	means = np.zeros((no_arms, no_fids))	#matrix of arm,fid means
 	#highest fidelity means uniform grid in (0,1)
 	high_fid_means = np.linspace(0.0,1.0, num=no_arms)
@@ -34,11 +34,6 @@ if __name__ == '__main__':
 		lower_bd = high_fid_means-zeta[m]
 		#sample low fidelity means uniformly from the zeta interval
 		means[:,m] = np.random.uniform(lower_bd, upper_bd, size=no_arms)	
-	#MODIFY the lower fidelity means of the optimal arm
-	#to be lower than the corresponding mean of a suboptimal arm
-	for m in range(no_fids-1):
-		while means[-1,m]>=means[-2,m]:
-			means[-1,m] = np.random.uniform(lower_bd[-1], upper_bd[-1], size=1)	
 	#plot means
 	plt.plot(means, '.')
 	plt.show()
@@ -85,20 +80,22 @@ if __name__ == '__main__':
 	#regret vs cost increases 
 	cost_constraints = [0.25*(10**5), 0.5*(10**5), 1*(10**5), 1.5*(10**5), 2*(10**5), 2.5*(10**5),
 						 3*(10**5), 3.5*(10**5), 4*(10**5), 4.5*(10**5), 5*(10**5)]
+	print(cost_constraints)
 	regrets = np.zeros_like(cost_constraints)
 	regrets2 = np.zeros_like(regrets)
 
 	for k in tqdm(range(len(cost_constraints))):
 		plays, regrets[k], optimal_pulls = env_mf.run(cost_constraints[k], experiments)
 		plays2, regrets2[k], optimal_pulls2 = env_single.run(cost_constraints[k], experiments)
-		#print("optimal pulls w/ MF = %d" %optimal_pulls)
-		#print("opt pulls w/ single fid = %d" %optimal_pulls2)
+		print("optimal pulls w/ MF = %d" %optimal_pulls)
+		print("opt pulls w/ single fid = %d" %optimal_pulls2)
 
 	#plot regret vs cost
-	plt.plot(cost_constraints, regrets, color='k', marker='s',label='MF-UCB')
-	plt.plot(cost_constraints, regrets2, color='b', marker='o',label='UCB')
+	plt.plot(cost_constraints, regrets, color='b', label='MF-UCB')
+	plt.plot(cost_constraints, regrets2, color='r', label='UCB')
 	plt.title('Regret vs Total Cost Constraint')
 	plt.legend()
 	axes = plt.gca()
 	axes.set_xlim([np.amin(cost_constraints), np.amax(cost_constraints)])
+	#axes.set_ylim([1*(10**4),10**8])
 	plt.show()	

@@ -14,22 +14,18 @@ class Agent(object):
     action is chosen using a strategy based on the history of prior actions
     and outcome observations.
     """
-    def __init__(self, bandit, policy, prior=0, gamma=None):
+    def __init__(self, bandit, policy):
         self.policy = policy
         self.k = bandit.k #get number of bandit arms
         self.m = bandit.m #get number of arm fidelities
         self.zeta = bandit.zeta #inherit fidelity mean over/undershooting bounds
         self.costs = bandit.costs #inherit costs of fidelities
 
-        #dont know what these two are for, just using default settings (which do nada)
-        self.prior = prior
-        self.gamma = gamma
-
         #gamma function for MFUCB algorithm - choosing fidelities based on costs
         self.make_gamma_fn(bandit.costs)
 
         #track estimates of values of each arm and fidelity
-        self._value_estimates = prior*np.ones((self.k, self.m))
+        self._value_estimates = np.zeros((self.k, self.m))
         #keeps track of number of plays at each arm and fidelity
         self.action_attempts = np.zeros((self.k,self.m)) 
         #track number of total plays
@@ -50,13 +46,13 @@ class Agent(object):
         self.gamma_fn = np.zeros(self.m-1)    
         for m in range(self.m-1):
             self.gamma_fn[m] = np.power((costs[m]/costs[m+1])*(self.zeta[1,m]**2), 1/2) 
-        print('gamma = ',self.gamma_fn)    
+        #print('gamma = ',self.gamma_fn)    
 
     def reset(self):
         """
         Resets the agent's memory to an initial state.
         """
-        self._value_estimates[:,:] = self.prior
+        self._value_estimates[:,:] = 0
         self.action_attempts[:,:] = 0
         self.last_action = None
         self.Lambda=0
@@ -76,17 +72,16 @@ class Agent(object):
         """
         #update count of plays of arm+fidelity
         self.action_attempts[self.last_action[0], self.last_action[1]] += 1
+        
+        g = 1 / self.action_attempts[self.last_action[0], self.last_action[1]]
 
-        if self.gamma is None:
-            g = 1 / self.action_attempts[self.last_action[0], self.last_action[1]]
-        else:
-            g = self.gamma
         #get historic value estimate for the arm+fidelity
         q = self._value_estimates[self.last_action[0], self.last_action[1]]
 
         #update estimate of value of current arm+fidelity
         #based on # of plays (1/g), historic estimate (q), and observed reward
         self._value_estimates[self.last_action[0], self.last_action[1]] += g*(reward - q)
+
 
         #update total play count
         self.t += 1

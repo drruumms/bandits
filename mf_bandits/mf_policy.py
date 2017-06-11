@@ -31,24 +31,33 @@ class UCBPolicy(Policy):
         self.rho = rho
     
     def __str__(self):
-        return 'UCB (rho={})'.format(self.rho)
+        return 'UCB'
 
     def choose(self, agent):
         #compute exploration term of UCB
-        exploration = np.power(agent.action_attempts,-1)*self.rho*np.log(agent.t+1)
-        exploration[np.isnan(exploration)] = 0
+        exploration = self.rho*np.log(agent.t+1)/(agent.action_attempts)
+        exploration[np.isinf(exploration)] = 0
         exploration = self.psi_inv(exploration)
 
         #recall that rows=arms, cols=fidelities, compute total UCB for each arm+fidelity
         q = agent.value_estimates + exploration
+        #print(q)
         #get q bound for each arm
-        q_arms = q[:, agent.m-1]
+        q_arms = q[:,agent.m-1]
+        #print(q_arms)
         #pick arm that maximizes arm bounds
         max_arm_index = np.argmax(q_arms)
+        #print(max_arm_index)
+        
         #play best arm at highest fidelity
         action=[max_arm_index,agent.m-1]
+        check = np.where(q == action)[0]
+        if check.shape[0] == 0:
+            return action
+        else:
+            return np.random.choice(check)
 
-        return action
+        #return action
 
 class MF_UCBPolicy(Policy):
     """
@@ -61,13 +70,13 @@ class MF_UCBPolicy(Policy):
         self.psi_inv = psi_inv
 
     def __str__(self):
-        return 'UCB (rho={})'.format(self.rho)
+        return 'MF_UCB'
 
     def choose(self, agent):
         #compute exploration term of UCB
         # exploration = np.power(agent.action_attempts,-1)*self.rho*np.log(agent.t+1)
         exploration = self.rho*np.log(agent.t+1)/(agent.action_attempts)
-        exploration[np.isnan(exploration)] = 10000
+        exploration[np.isnan(exploration)] = 0
         exploration = self.psi_inv(exploration)
 
         #recall that rows=arms, cols=fidelities, compute total UCB for each arm+fidelity
@@ -89,8 +98,3 @@ class MF_UCBPolicy(Policy):
             action=[max_arm_index,agent.m-1]
 
         return action
-        # check = np.where(q == action)[0]
-        # if len(check) == 0:
-        #     return action
-        # else:
-        #     return np.random.choice(check)

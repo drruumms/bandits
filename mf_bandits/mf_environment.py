@@ -28,10 +28,19 @@ class Environment(object):
 
     def pull_all_arms(self, plays, regret):
         #pull each arm once at each fidelity to intialize
+        #check whether UCB or MFUCB policy first
+        if self.agent.policy.__str__()=='MF_UCB':
+            no_fids = self.bandit.m
+        else:
+            no_fids=1
+
+        #loop over all arms
         for k in range(self.bandit.k):
             #reward for pulling highest fidelity for this arm
-            high_fid_reward, dont_use = self.bandit.pull([k, self.bandit.m-1])
-            for m in range(self.bandit.m):
+            high_fid_reward = self.bandit.action_values[k, self.bandit.m-1]
+
+            #loop over fidelities backwards (for UCB compatibility)
+            for m in range(self.bandit.m-1, -1, -1):
                 #get reward for arm k fidelity m
                 action = [k,m]
                 reward, dont_use = self.bandit.pull(action)
@@ -43,7 +52,10 @@ class Environment(object):
                 self.agent.observe(reward)
                 plays[k,m] +=1
                 regret -= pull_cost*high_fid_reward
-        #return play count, regret        
+                if no_fids==1:
+                    break
+        #return play count, regret      
+        print("regret = ", regret)
         return plays, regret        
 
     def run(self, COST_CONSTRAINT, experiments=1):
@@ -55,8 +67,9 @@ class Environment(object):
         for _ in range(experiments):
             self.reset()
             #initialize regret
-            optimal_reward, dont_use = self.bandit.pull(self.bandit.optimal)
+            optimal_reward = self.bandit.action_values[self.bandit.optimal[0], self.bandit.optimal[1]]
             regret = COST_CONSTRAINT*optimal_reward
+            print("regret=",regret)
 
             #pull each arm once at each fidelity to intialize
             plays, regret = self.pull_all_arms(plays, regret)
@@ -68,18 +81,39 @@ class Environment(object):
 
                 arm_index = action[0]
                 fidelity_index = action[1]
-                high_fid_reward, dont_use = self.bandit.pull([arm_index, self.bandit.m-1])
-                #print("arm= %d" %arm_index)
-                #print("fidelity = %d" %fidelity_index)
+                high_fid_reward = self.bandit.action_values[arm_index, self.bandit.m-1]
+                # print("arm= %d" %arm_index)
+                # print("fidelity = %d" %fidelity_index)
                 pull_cost = self.bandit.costs[fidelity_index]
                 optimal_pulls += optimal_pull
 
+                #check to see if pull is affordable
                 if self.agent.Lambda+pull_cost <= COST_CONSTRAINT:
                     self.agent.observe(reward)
                     plays[arm_index, fidelity_index]+=1
                     regret -= pull_cost*high_fid_reward
-                else:
-                    break
+                    # print("regret=",regret)
+                #otherwise, pull lower fidelities of this arm    
+                else: 
+                    print("high fid pulls unaffordable")
+                    fidelity_index-=1
+                    while fidelity_index >= 0:
+                        #pull next highest fidelity until unaffordable
+                        while self.agent.Lambda+self.bandit.costs[fidelity_index] <= COST_CONSTRAINT:
+                            action = [arm_index,fidelity_index]
+                            reward, optimal_pull = self.bandit.pull(action)
+                            pull_cost = self.bandit.costs[fidelity_index]
+                            self.agent.observe(reward)
+                            plays[arm_index, fidelity_index] +=1
+                            regret-=pull_cost*high_fid_reward
+                            print("regret=",regret)
+                        print("next fid pulls unaffordable")
+                        #pull lower fidelity    
+                        fidelity_index-=1
+                    print("all fidelity pulls unaffordable")
+                    break    
+
+                    
             ave_regret+= regret             
                    
         return plays / experiments, ave_regret / experiments, optimal_pulls / experiments
