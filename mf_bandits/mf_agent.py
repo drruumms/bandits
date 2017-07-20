@@ -45,7 +45,11 @@ class Agent(object):
         """
         self.gamma_fn = np.zeros(self.m-1)    
         for m in range(self.m-1):
-            self.gamma_fn[m] = np.power((costs[m]/costs[m+1])*(self.zeta[1,m]**2), 1/2) 
+            #zeta^2 is default from paper
+            self.gamma_fn[m] = np.power((costs[m]/costs[m+1])*(self.zeta[1,m]**2), 1/2)
+            #why not just zeta^1/2? will result in less exploration
+            #self.gamma_fn[m] = np.power((costs[m]/costs[m+1])*(self.zeta[1,m]**(1/32)), 1/2)
+            #still only approaches UCB
         #print('gamma = ',self.gamma_fn)    
 
     def reset(self):

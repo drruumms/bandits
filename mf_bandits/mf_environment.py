@@ -36,8 +36,8 @@ class Environment(object):
 
         #loop over all arms
         for k in range(self.bandit.k):
-            #reward for pulling highest fidelity for this arm
-            high_fid_reward = self.bandit.action_values[k, self.bandit.m-1]
+            #mean reward for pulling highest fidelity for this arm
+            high_fid_mean_reward = self.bandit.action_values[k, self.bandit.m-1]
 
             #loop over fidelities backwards (for UCB compatibility)
             for m in range(self.bandit.m-1, -1, -1):
@@ -51,7 +51,7 @@ class Environment(object):
                 #observe and record plays, rewards, regrets
                 self.agent.observe(reward)
                 plays[k,m] +=1
-                regret -= pull_cost*high_fid_reward
+                regret -= pull_cost*high_fid_mean_reward
                 if no_fids==1:
                     break
         #return play count, regret      
@@ -67,8 +67,8 @@ class Environment(object):
         for _ in range(experiments):
             self.reset()
             #initialize regret
-            optimal_reward = self.bandit.action_values[self.bandit.optimal[0], self.bandit.optimal[1]]
-            regret = COST_CONSTRAINT*optimal_reward
+            optimal_mean_reward = self.bandit.action_values[self.bandit.optimal[0], self.bandit.optimal[1]]
+            regret = COST_CONSTRAINT*optimal_mean_reward
             print("regret=",regret)
 
             #pull each arm once at each fidelity to intialize
@@ -81,7 +81,7 @@ class Environment(object):
 
                 arm_index = action[0]
                 fidelity_index = action[1]
-                high_fid_reward = self.bandit.action_values[arm_index, self.bandit.m-1]
+                high_fid_mean_reward = self.bandit.action_values[arm_index, self.bandit.m-1]
                 # print("arm= %d" %arm_index)
                 # print("fidelity = %d" %fidelity_index)
                 pull_cost = self.bandit.costs[fidelity_index]
@@ -91,7 +91,7 @@ class Environment(object):
                 if self.agent.Lambda+pull_cost <= COST_CONSTRAINT:
                     self.agent.observe(reward)
                     plays[arm_index, fidelity_index]+=1
-                    regret -= pull_cost*high_fid_reward
+                    regret -= pull_cost*high_fid_mean_reward
                     # print("regret=",regret)
                 #otherwise, pull lower fidelities of this arm    
                 else: 
@@ -105,7 +105,7 @@ class Environment(object):
                             pull_cost = self.bandit.costs[fidelity_index]
                             self.agent.observe(reward)
                             plays[arm_index, fidelity_index] +=1
-                            regret-=pull_cost*high_fid_reward
+                            regret-=pull_cost*high_fid_mean_reward
                             print("regret=",regret)
                         print("next fid pulls unaffordable")
                         #pull lower fidelity    

@@ -81,10 +81,17 @@ class MF_UCBPolicy(Policy):
 
         #recall that rows=arms, cols=fidelities, compute total UCB for each arm+fidelity
         q = agent.value_estimates + exploration + agent.zeta
+        #q2 = agent.value_estimates + exploration - agent.zeta
         #get min q bounds across fidelities for each arm
         min_arm_bounds = np.amin(q, axis=1)
+        #min_arm_bounds2 = np.amin(q2, axis=1)
         #pick arm that maximizes min arm bounds
         max_arm_index = np.argmax(min_arm_bounds)
+        #max_arm_index2 = np.argmax(min_arm_bounds2)
+        #pick max of those two
+        # if min_arm_bounds[max_arm_index]<min_arm_bounds2[max_arm_index2]:
+        #     print("actually using this change")
+        #     max_arm_index = max_arm_index2
         #pick lowest, most uncertain fidelity
         action = None
         for m in range(agent.m-1):

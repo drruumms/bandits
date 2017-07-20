@@ -19,7 +19,7 @@ if __name__ == '__main__':
 	experiments = 1
 
 	#Example 1 - Linear means, Gaussian rewards
-	zeta = [1, 0.5, 0.2, 0] 	#bound on fidelity mean over/undershoot
+	zeta = [0.8, 0.5, 0.2, 0] 	#bound on fidelity mean over/undershoot
 	costs = [1, 5, 20, 50] 	#increasing costs of increasing fidelities
 	no_arms = 500  		  	#number of arms in multi-armed bandit
 	no_fids = 4				#number of fidelities per arm
